@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-cloud text-midnight font-sans min-h-screen;
+}
+
+.btn {
+  @apply inline-flex items-center justify-center rounded-md bg-signal px-4 py-2 text-white font-semibold shadow hover:bg-blue-600 transition;
+}
+
+.card {
+  @apply bg-white shadow-sm rounded-lg border border-slate/20;
+}
