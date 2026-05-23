@@ -23,7 +23,7 @@ export default function Navbar() {
           {links.map((link) => (
             <Link
               key={link.href}
-              href={link.href}
+              href={link.href as any}
               className={`px-3 py-1 rounded-md hover:bg-slate/30 ${pathname === link.href ? 'bg-slate/40' : ''}`}
             >
               {link.label}

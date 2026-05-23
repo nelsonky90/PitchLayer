@@ -1,20 +1,25 @@
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 
-const apiKey = process.env.OPENAI_API_KEY;
+const apiKey = process.env.ANTHROPIC_API_KEY;
 if (!apiKey) {
-  console.warn('OPENAI_API_KEY not set.');
+  console.warn('ANTHROPIC_API_KEY not set.');
 }
 
-export const openai = new OpenAI({ apiKey, maxRetries: 2 });
+const client = new Anthropic({ apiKey, maxRetries: 2 });
 
-export async function generatePitchContent(prompt: string) {
-  const response = await openai.chat.completions.create({
-    model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-    messages: [
-      { role: 'system', content: 'You are a secure assistant that produces JSON only.' },
-      { role: 'user', content: prompt }
-    ],
-    temperature: 0.4
+export async function generatePitchContent(prompt: string): Promise<string> {
+  const response = await client.messages.create({
+    model: 'claude-opus-4-7',
+    max_tokens: 4096,
+    thinking: { type: 'adaptive' },
+    system: 'You are a secure assistant that produces JSON only.',
+    messages: [{ role: 'user', content: prompt }]
   });
-  return response.choices[0]?.message?.content || '';
+
+  for (const block of response.content) {
+    if (block.type === 'text') {
+      return block.text;
+    }
+  }
+  return '';
 }
