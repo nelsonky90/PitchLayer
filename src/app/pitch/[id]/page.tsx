@@ -1,22 +1,32 @@
-import PersonaCard from '@/app/components/PersonaCard';
-import PDFExport from '@/app/components/PDFExport';
-import SlidesExport from '@/app/components/SlidesExport';
+import { getServerSession } from 'next-auth';
+import { redirect } from 'next/navigation';
+import { authOptions } from '@/lib/auth';
+import { supabaseAdmin } from '@/lib/db';
+import PersonaCard from '@/components/PersonaCard';
+import PDFExport from '@/components/PDFExport';
+import SlidesExport from '@/components/SlidesExport';
 import { Persona } from '@/types/pitch';
 
-async function getPitch(id: string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/pitches/${id}`, {
-    cache: 'no-store'
-  });
-  if (!res.ok) return null;
-  return res.json();
+async function getPitch(id: string, userId: string) {
+  const { data } = await supabaseAdmin
+    .from('pitches')
+    .select('*')
+    .eq('id', id)
+    .eq('user_id', userId)
+    .is('deleted_at', null)
+    .maybeSingle();
+  return data;
 }
 
 export default async function PitchDetailPage({ params }: { params: { id: string } }) {
-  const pitch = await getPitch(params.id);
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) redirect('/auth/signin');
+
+  const pitch = await getPitch(params.id, session.user.id);
   if (!pitch) {
     return <p>Pitch not found.</p>;
   }
-  const personas = (pitch.ai_output?.personas || []) as Persona[];
+  const personas = ((pitch.ai_output as Record<string, unknown>)?.personas || []) as Persona[];
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">

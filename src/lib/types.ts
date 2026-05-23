@@ -30,7 +30,20 @@ export interface Database {
           updated_at?: string;
           deleted_at?: string | null;
         };
-        Update: Partial<Database['public']['Tables']['pitches']['Insert']>;
+        Update: {
+          id?: string;
+          user_id?: string;
+          company?: string;
+          opportunity?: string;
+          personas?: Json;
+          pain_points?: string;
+          benefits?: string;
+          ai_output?: Json;
+          created_at?: string;
+          updated_at?: string;
+          deleted_at?: string | null;
+        };
+        Relationships: [];
       };
       users: {
         Row: {
@@ -49,8 +62,20 @@ export interface Database {
           locked_until?: string | null;
           failed_attempts?: number | null;
         };
-        Update: Partial<Database['public']['Tables']['users']['Insert']>;
+        Update: {
+          id?: string;
+          email?: string;
+          password_hash?: string | null;
+          mfa_secret?: string | null;
+          locked_until?: string | null;
+          failed_attempts?: number | null;
+        };
+        Relationships: [];
       };
     };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
   };
 }

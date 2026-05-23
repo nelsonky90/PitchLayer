@@ -1,4 +1,4 @@
-import PitchForm from '@/app/components/PitchForm';
+import PitchForm from '@/components/PitchForm';
 
 export default function NewPitchPage() {
   return (

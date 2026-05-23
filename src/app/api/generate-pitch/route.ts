@@ -51,7 +51,7 @@ Return JSON: ...`;
       personas: parsed.personas,
       pain_points: parsed.pain_points,
       benefits: parsed.benefits,
-      ai_output: aiJson
+      ai_output: aiJson as import('@/lib/types').Json
     });
 
     return NextResponse.json({ pitch_id: pitchId, ai_output: aiJson });
