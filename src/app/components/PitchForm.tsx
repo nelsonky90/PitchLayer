@@ -9,16 +9,25 @@ import { z } from 'zod';
 
 type FormValues = z.infer<typeof pitchSchema>;
 
+type InitialValues = {
+  company?: string;
+  opportunity?: string;
+  pain_points?: string;
+  benefits?: string;
+};
+
 function getCsrfToken() {
   if (typeof document === 'undefined') return '';
   const match = document.cookie.match(/csrf-token=([^;]+)/);
   return match ? decodeURIComponent(match[1]) : '';
 }
 
-export default function PitchForm() {
+export default function PitchForm({ initialValues }: { initialValues?: InitialValues }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const isDuplicate = Boolean(initialValues);
 
   const {
     register,
@@ -26,7 +35,13 @@ export default function PitchForm() {
     formState: { errors }
   } = useForm<FormValues>({
     resolver: zodResolver(pitchSchema),
-    defaultValues: { personas: ['Economic Buyer'] }
+    defaultValues: {
+      company: initialValues?.company ?? '',
+      opportunity: initialValues?.opportunity ?? '',
+      pain_points: initialValues?.pain_points ?? '',
+      benefits: initialValues?.benefits ?? '',
+      personas: isDuplicate ? [] : ['Economic Buyer']
+    }
   });
 
   const onSubmit = async (values: FormValues) => {
