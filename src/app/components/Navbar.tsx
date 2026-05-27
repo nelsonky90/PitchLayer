@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ShieldCheck } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
+import type { Route } from 'next';
 
 const links = [
   { href: '/', label: 'Home' },
@@ -26,7 +27,7 @@ export default function Navbar() {
           {links.map((link) => (
             <Link
               key={link.href}
-              href={link.href}
+              href={link.href as Route}
               className={`px-3 py-1 rounded-md hover:bg-slate/30 ${pathname === link.href ? 'bg-slate/40' : ''}`}
             >
               {link.label}
