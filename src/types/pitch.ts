@@ -1,3 +1,13 @@
+export type Objection = {
+  objection: string;
+  response: string;
+};
+
+export type EmailTemplate = {
+  subject: string;
+  body: string;
+};
+
 export type Persona = {
   name: string;
   summary: string;
@@ -6,6 +16,8 @@ export type Persona = {
   benefits: string[];
   headlines: string[];
   talking_points: string[];
+  objections: Objection[];
+  email_template?: EmailTemplate;
   cta: string;
 };
 

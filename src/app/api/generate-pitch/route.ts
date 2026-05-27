@@ -46,12 +46,24 @@ Return a JSON object with this exact structure (pure JSON only, no markdown):
       "benefits": ["<specific benefit 1>", "<specific benefit 2>", "<specific benefit 3>"],
       "headlines": ["<punchy email/meeting subject line 1>", "<punchy subject line 2>"],
       "talking_points": ["<key talking point 1>", "<key talking point 2>", "<key talking point 3>"],
-      "cta": "<specific call to action for this persona>"
+      "objections": [
+        { "objection": "<likely internal pushback this persona will hear, e.g. 'we already evaluated this' or 'what about migration risk'>", "response": "<crisp, confident rebuttal the champion can use>" },
+        { "objection": "<second likely objection>", "response": "<rebuttal>" },
+        { "objection": "<third likely objection>", "response": "<rebuttal>" }
+      ],
+      "email_template": {
+        "subject": "<subject line for an internal email the champion can forward to their leadership>",
+        "body": "<3-5 sentence email body the champion can copy-paste and send internally to build support, written in first person from the champion's perspective>"
+      },
+      "cta": "<specific next-step call to action for this persona>"
     }
   ]
 }
 
-Generate one persona object for EACH of these ${parsed.personas.length} persona(s): ${parsed.personas.join(', ')}.`;
+Rules:
+- Generate one persona object for EACH of these ${parsed.personas.length} persona(s): ${parsed.personas.join(', ')}.
+- Do NOT invent specific dates, days of the week, or deadlines. If a timeframe is useful, use a neutral placeholder like "[date]" or phrase it relative to a known event (e.g. "before the renewal date").
+- Only use facts present in the input above; do not fabricate statistics or product names.`;
 
     let aiResponse: string;
     try {

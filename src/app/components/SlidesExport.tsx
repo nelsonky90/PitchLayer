@@ -43,6 +43,17 @@ function buildHtml(personas: Persona[]): string {
             <div class="label">Talking Points</div>
             <ul>${p.talking_points.map((t) => `<li>${escHtml(t)}</li>`).join('')}</ul>
           </div>` : ''}
+          ${p.objections?.length ? `
+          <div class="field">
+            <div class="label">Objection Handling</div>
+            <ul>${p.objections.map((o) => `<li><strong>${escHtml(o.objection)}</strong> — ${escHtml(o.response)}</li>`).join('')}</ul>
+          </div>` : ''}
+          ${p.email_template ? `
+          <div class="field">
+            <div class="label">Internal Email Template</div>
+            <p><strong>Subject:</strong> ${escHtml(p.email_template.subject)}</p>
+            <p style="white-space:pre-wrap;margin-top:8px">${escHtml(p.email_template.body)}</p>
+          </div>` : ''}
         </div>
       </div>
     </section>`).join('');

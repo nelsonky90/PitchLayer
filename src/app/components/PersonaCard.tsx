@@ -1,4 +1,5 @@
 import { Persona } from '@/types/pitch';
+import CopyEmailButton from './CopyEmailButton';
 
 export default function PersonaCard({ persona }: { persona: Persona }) {
   return (
@@ -29,6 +30,29 @@ export default function PersonaCard({ persona }: { persona: Persona }) {
           ))}
         </ul>
       </div>
+      {persona.objections?.length > 0 && (
+        <div>
+          <h4 className="font-semibold">Objection Handling</h4>
+          <ul className="space-y-2 text-sm">
+            {persona.objections.map((o) => (
+              <li key={o.objection} className="border-l-2 border-signal/40 pl-3">
+                <p className="font-medium text-midnight">&ldquo;{o.objection}&rdquo;</p>
+                <p className="text-slate">{o.response}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {persona.email_template && (
+        <div>
+          <h4 className="font-semibold">Internal Email Template</h4>
+          <div className="rounded bg-cloud border border-gray-200 p-3 text-sm space-y-2">
+            <p className="text-slate"><strong>Subject:</strong> {persona.email_template.subject}</p>
+            <p className="whitespace-pre-wrap text-midnight">{persona.email_template.body}</p>
+            <CopyEmailButton subject={persona.email_template.subject} body={persona.email_template.body} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,15 @@
 import { z } from 'zod';
 
+export const objectionSchema = z.object({
+  objection: z.string().min(1).trim(),
+  response: z.string().min(1).trim()
+});
+
+export const emailTemplateSchema = z.object({
+  subject: z.string().min(1).trim(),
+  body: z.string().min(1).trim()
+});
+
 export const personaSchema = z.object({
   name: z.string().min(1).trim(),
   summary: z.string().min(1).trim(),
@@ -8,6 +18,8 @@ export const personaSchema = z.object({
   benefits: z.array(z.string().trim()).default([]),
   headlines: z.array(z.string().trim()).default([]),
   talking_points: z.array(z.string().trim()).default([]),
+  objections: z.array(objectionSchema).default([]),
+  email_template: emailTemplateSchema.optional(),
   cta: z.string().min(1).trim()
 });
 

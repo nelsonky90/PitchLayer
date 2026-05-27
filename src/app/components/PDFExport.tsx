@@ -26,6 +26,10 @@ function addPageHeader(doc: jsPDF, pitchId?: string) {
 }
 
 function addSection(doc: jsPDF, label: string, value: string | string[], y: number): number {
+  if (y > 265) {
+    doc.addPage();
+    y = 20;
+  }
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(TEAL);
@@ -84,6 +88,18 @@ export default function PDFExport({ personas, pitchId }: { personas: Persona[]; 
       }
       if (persona.talking_points?.length) {
         y = addSection(doc, 'Talking Points', persona.talking_points, y);
+      }
+      if (persona.objections?.length) {
+        const formatted = persona.objections.map((o) => `"${o.objection}" — ${o.response}`);
+        y = addSection(doc, 'Objection Handling', formatted, y);
+      }
+      if (persona.email_template) {
+        y = addSection(
+          doc,
+          'Internal Email Template',
+          [`Subject: ${persona.email_template.subject}`, persona.email_template.body],
+          y
+        );
       }
       if (persona.cta) {
         // CTA highlight box
