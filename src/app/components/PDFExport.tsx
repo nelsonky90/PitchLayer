@@ -13,7 +13,9 @@ const CONTENT_W = PAGE_W - MARGIN * 2;
 async function loadImageBase64(url: string): Promise<string | null> {
   try {
     const res = await fetch(url);
+    if (!res.ok) return null;
     const blob = await res.blob();
+    if (!blob.type.startsWith('image/') || blob.type.includes('svg')) return null;
     return await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result as string);
@@ -23,6 +25,11 @@ async function loadImageBase64(url: string): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+function formatFromDataUrl(dataUrl: string): string {
+  const m = dataUrl.match(/^data:image\/(\w+);/);
+  return m ? m[1].toUpperCase() : 'PNG';
 }
 
 function addSection(doc: jsPDF, label: string, value: string | string[], y: number): number {
@@ -56,14 +63,17 @@ interface PDFExportProps {
   company: string;
   recipientName: string;
   recipientJobTitle: string;
-  logoUrl?: string | null;
+  logoPrimaryUrl?: string | null;
+  logoFallbackUrl?: string | null;
 }
 
-export default function PDFExport({ personas, company, recipientName, recipientJobTitle, logoUrl }: PDFExportProps) {
+export default function PDFExport({ personas, company, recipientName, recipientJobTitle, logoPrimaryUrl, logoFallbackUrl }: PDFExportProps) {
   const generate = async () => {
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
 
-    const logoBase64 = logoUrl ? await loadImageBase64(logoUrl) : null;
+    let logoBase64: string | null = null;
+    if (logoPrimaryUrl) logoBase64 = await loadImageBase64(logoPrimaryUrl);
+    if (!logoBase64 && logoFallbackUrl) logoBase64 = await loadImageBase64(logoFallbackUrl);
 
     personas.forEach((persona, idx) => {
       if (idx > 0) doc.addPage();
@@ -75,7 +85,7 @@ export default function PDFExport({ personas, company, recipientName, recipientJ
       let headerX = MARGIN;
       if (logoBase64) {
         try {
-          doc.addImage(logoBase64, 'PNG', MARGIN, 4, 16, 16);
+          doc.addImage(logoBase64, formatFromDataUrl(logoBase64), MARGIN, 4, 16, 16);
           headerX = MARGIN + 20;
         } catch {
           // Logo failed — just use text

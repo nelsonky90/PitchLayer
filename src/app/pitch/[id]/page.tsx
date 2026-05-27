@@ -27,7 +27,8 @@ export default async function PitchDetailPage({ params }: { params: { id: string
   const personas = (output?.personas || []) as Persona[];
   const recipientName = (output?.recipient_name as string) || '';
   const recipientJobTitle = (output?.recipient_job_title as string) || '';
-  const logoUrl = (output?.logo_url as string) || null;
+  const companyWebsite = (output?.company_website as string) || null;
+  const legacyLogoUrl = (output?.logo_url as string) || null;
 
   return (
     <PitchView
@@ -36,7 +37,8 @@ export default async function PitchDetailPage({ params }: { params: { id: string
       opportunity={pitch.opportunity}
       recipientName={recipientName}
       recipientJobTitle={recipientJobTitle}
-      logoUrl={logoUrl}
+      companyWebsite={companyWebsite}
+      legacyLogoUrl={legacyLogoUrl}
       initialPersonas={personas}
     />
   );

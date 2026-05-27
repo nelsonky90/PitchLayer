@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Persona } from '@/types/pitch';
+import { clearbitLogo, faviconLogo } from '@/utils/logo';
 import PersonaCard from './PersonaCard';
 import PersonaEditor from './PersonaEditor';
 import PDFExport from './PDFExport';
@@ -15,7 +16,8 @@ export default function PitchView({
   opportunity,
   recipientName,
   recipientJobTitle,
-  logoUrl,
+  companyWebsite,
+  legacyLogoUrl,
   initialPersonas
 }: {
   pitchId: string;
@@ -23,9 +25,12 @@ export default function PitchView({
   opportunity: string;
   recipientName: string;
   recipientJobTitle: string;
-  logoUrl?: string | null;
+  companyWebsite?: string | null;
+  legacyLogoUrl?: string | null;
   initialPersonas: Persona[];
 }) {
+  const logoPrimaryUrl = companyWebsite ? clearbitLogo(companyWebsite) : legacyLogoUrl || null;
+  const logoFallbackUrl = companyWebsite ? faviconLogo(companyWebsite) : null;
   const router = useRouter();
   const [personas, setPersonas] = useState<Persona[]>(initialPersonas);
   const [editing, setEditing] = useState(false);
@@ -43,7 +48,13 @@ export default function PitchView({
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ai_output: { personas, recipient_name: recipientName, recipient_job_title: recipientJobTitle, logo_url: logoUrl }
+          ai_output: {
+            personas,
+            recipient_name: recipientName,
+            recipient_job_title: recipientJobTitle,
+            company_website: companyWebsite,
+            logo_url: legacyLogoUrl
+          }
         })
       });
       const data = await res.json();
@@ -99,14 +110,16 @@ export default function PitchView({
                 company={company}
                 recipientName={recipientName}
                 recipientJobTitle={recipientJobTitle}
-                logoUrl={logoUrl}
+                logoPrimaryUrl={logoPrimaryUrl}
+                logoFallbackUrl={logoFallbackUrl}
               />
               <SlidesExport
                 personas={personas}
                 company={company}
                 recipientName={recipientName}
                 recipientJobTitle={recipientJobTitle}
-                logoUrl={logoUrl}
+                logoPrimaryUrl={logoPrimaryUrl}
+                logoFallbackUrl={logoFallbackUrl}
               />
             </>
           )}

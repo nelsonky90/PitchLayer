@@ -4,6 +4,7 @@ import { pitchSchema, personaSchema } from '@/lib/validation';
 import { generatePitchContent } from '@/lib/openai';
 import { supabaseAdmin } from '@/lib/db';
 import { rateLimit } from '@/utils/rateLimit';
+import { normalizeDomain } from '@/utils/logo';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { randomUUID } from 'crypto';
@@ -92,7 +93,7 @@ Rules:
       ...validated.data,
       recipient_name: parsed.recipient_name,
       recipient_job_title: parsed.recipient_job_title,
-      logo_url: parsed.logo_url || null
+      company_website: normalizeDomain(parsed.company_website)
     };
     const pitchId = randomUUID();
 

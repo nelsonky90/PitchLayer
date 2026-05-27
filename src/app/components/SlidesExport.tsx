@@ -11,12 +11,16 @@ interface SlidesExportProps {
   company: string;
   recipientName: string;
   recipientJobTitle: string;
-  logoUrl?: string | null;
+  logoPrimaryUrl?: string | null;
+  logoFallbackUrl?: string | null;
 }
 
-function buildHtml({ personas, company, recipientName, recipientJobTitle, logoUrl }: SlidesExportProps): string {
-  const logoTag = logoUrl
-    ? `<img src="${escHtml(logoUrl)}" alt="${escHtml(company)} logo" style="height:40px;object-fit:contain;margin-right:16px" onerror="this.style.display='none'">`
+function buildHtml({ personas, company, recipientName, recipientJobTitle, logoPrimaryUrl, logoFallbackUrl }: SlidesExportProps): string {
+  const onErr = logoFallbackUrl
+    ? `if(!this.dataset.fb){this.dataset.fb='1';this.src='${escHtml(logoFallbackUrl)}'}else{this.style.display='none'}`
+    : `this.style.display='none'`;
+  const logoTag = logoPrimaryUrl
+    ? `<img src="${escHtml(logoPrimaryUrl)}" alt="${escHtml(company)} logo" style="height:40px;object-fit:contain;margin-right:16px" onerror="${onErr}">`
     : '';
 
   const slides = personas.map((p) => `

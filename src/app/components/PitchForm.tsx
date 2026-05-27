@@ -14,6 +14,7 @@ type InitialValues = {
   opportunity?: string;
   pain_points?: string;
   benefits?: string;
+  company_website?: string;
 };
 
 const inputCls = 'w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-signal';
@@ -45,7 +46,7 @@ export default function PitchForm({ initialValues }: { initialValues?: InitialVa
       personas: isDuplicate ? [] : ['Economic Buyer'],
       recipient_name: '',
       recipient_job_title: '',
-      logo_url: ''
+      company_website: initialValues?.company_website ?? ''
     }
   });
 
@@ -91,14 +92,14 @@ export default function PitchForm({ initialValues }: { initialValues?: InitialVa
 
         <div>
           <label className="block text-sm font-medium mb-1">
-            Customer Logo URL <span className="text-slate font-normal">(optional)</span>
+            Customer Website <span className="text-slate font-normal">(optional — used to fetch their logo)</span>
           </label>
           <input
             className={inputCls}
-            placeholder="https://example.com/logo.png"
-            {...register('logo_url')}
+            placeholder="e.g. betfanatics.com"
+            {...register('company_website')}
           />
-          {errors.logo_url && <p className="text-sm text-red-600 mt-1">{errors.logo_url.message}</p>}
+          {errors.company_website && <p className="text-sm text-red-600 mt-1">{errors.company_website.message}</p>}
         </div>
 
         <div>
