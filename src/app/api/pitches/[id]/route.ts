@@ -15,6 +15,7 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
     .select('*')
     .eq('id', params.id)
     .eq('user_id', session.user.id)
+    .is('deleted_at', null)
     .maybeSingle();
   if (error || !data) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -40,21 +41,30 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Bad request';
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 }
 
-export async function DELETE(_: Request, { params }: { params: { id: string } }) {
-  verifyCsrf();
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+  try {
+    verifyCsrf();
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const { error } = await supabaseAdmin
+      .from('pitches')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', params.id)
+      .eq('user_id', session.user.id);
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    return NextResponse.json({ success: true });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Internal Server Error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-  await supabaseAdmin
-    .from('pitches')
-    .update({ deleted_at: new Date().toISOString() })
-    .eq('id', params.id)
-    .eq('user_id', session.user.id);
-  return NextResponse.json({ success: true });
 }

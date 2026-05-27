@@ -2,6 +2,7 @@ import './globals.css';
 import { ReactNode } from 'react';
 import { Metadata } from 'next';
 import Navbar from './components/Navbar';
+import Providers from './components/Providers';
 
 export const metadata: Metadata = {
   title: 'PitchLayer | Champion Enablement',
@@ -13,8 +14,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body className="bg-cloud text-midnight">
-        <Navbar />
-        <main className="max-w-6xl mx-auto px-4 py-8">{children}</main>
+        <Providers>
+          <Navbar />
+          <main className="max-w-6xl mx-auto px-4 py-8">{children}</main>
+        </Providers>
       </body>
     </html>
   );

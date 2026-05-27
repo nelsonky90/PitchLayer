@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ShieldCheck } from 'lucide-react';
+import { useSession, signOut } from 'next-auth/react';
 
 const links = [
   { href: '/', label: 'Home' },
@@ -12,6 +13,8 @@ const links = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+
   return (
     <nav className="bg-midnight text-white">
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -23,12 +26,27 @@ export default function Navbar() {
           {links.map((link) => (
             <Link
               key={link.href}
-              href={link.href as any}
+              href={link.href}
               className={`px-3 py-1 rounded-md hover:bg-slate/30 ${pathname === link.href ? 'bg-slate/40' : ''}`}
             >
               {link.label}
             </Link>
           ))}
+          {session ? (
+            <div className="flex items-center gap-3">
+              <span className="text-slate-300 text-xs hidden sm:block">{session.user?.email}</span>
+              <button
+                onClick={() => signOut({ callbackUrl: '/' })}
+                className="px-3 py-1 rounded-md hover:bg-slate/30 text-slate-300"
+              >
+                Sign out
+              </button>
+            </div>
+          ) : (
+            <Link href="/auth/signin" className="px-3 py-1 rounded-md hover:bg-slate/30">
+              Sign in
+            </Link>
+          )}
         </div>
       </div>
     </nav>
