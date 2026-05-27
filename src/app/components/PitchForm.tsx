@@ -16,6 +16,8 @@ type InitialValues = {
   benefits?: string;
 };
 
+const inputCls = 'w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-signal';
+
 function getCsrfToken() {
   if (typeof document === 'undefined') return '';
   const match = document.cookie.match(/csrf-token=([^;]+)/);
@@ -40,7 +42,10 @@ export default function PitchForm({ initialValues }: { initialValues?: InitialVa
       opportunity: initialValues?.opportunity ?? '',
       pain_points: initialValues?.pain_points ?? '',
       benefits: initialValues?.benefits ?? '',
-      personas: isDuplicate ? [] : ['Economic Buyer']
+      personas: isDuplicate ? [] : ['Economic Buyer'],
+      recipient_name: '',
+      recipient_job_title: '',
+      logo_url: ''
     }
   });
 
@@ -70,31 +75,48 @@ export default function PitchForm({ initialValues }: { initialValues?: InitialVa
     <div className="card p-6 space-y-4 max-w-2xl mx-auto">
       <h2 className="text-xl font-semibold">Create a new pitch</h2>
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm font-medium mb-1">Recipient Name</label>
+            <input className={inputCls} placeholder="e.g. Sarah Johnson" {...register('recipient_name')} />
+            {errors.recipient_name && <p className="text-sm text-red-600 mt-1">{errors.recipient_name.message}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Recipient Job Title</label>
+            <input className={inputCls} placeholder="e.g. VP Engineering" {...register('recipient_job_title')} />
+            {errors.recipient_job_title && <p className="text-sm text-red-600 mt-1">{errors.recipient_job_title.message}</p>}
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Customer Logo URL <span className="text-slate font-normal">(optional)</span>
+          </label>
+          <input
+            className={inputCls}
+            placeholder="https://example.com/logo.png"
+            {...register('logo_url')}
+          />
+          {errors.logo_url && <p className="text-sm text-red-600 mt-1">{errors.logo_url.message}</p>}
+        </div>
+
         <div>
           <label className="block text-sm font-medium mb-1">Company</label>
-          <input
-            className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-signal"
-            placeholder="e.g. Acme Corp"
-            {...register('company')}
-          />
+          <input className={inputCls} placeholder="e.g. Acme Corp" {...register('company')} />
           {errors.company && <p className="text-sm text-red-600 mt-1">{errors.company.message}</p>}
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-1">Opportunity</label>
-          <textarea
-            className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-signal"
-            rows={2}
-            placeholder="e.g. Replacing legacy data warehouse to reduce costs"
-            {...register('opportunity')}
-          />
+          <textarea className={inputCls} rows={2} placeholder="e.g. Replacing legacy data warehouse to reduce costs" {...register('opportunity')} />
           {errors.opportunity && <p className="text-sm text-red-600 mt-1">{errors.opportunity.message}</p>}
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-1">Personas <span className="text-slate font-normal">(comma separated)</span></label>
           <input
-            className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-signal"
+            className={inputCls}
             placeholder="e.g. Economic Buyer, Champion, Technical Evaluator"
             {...register('personas', {
               setValueAs: (value) =>
@@ -103,30 +125,18 @@ export default function PitchForm({ initialValues }: { initialValues?: InitialVa
                   : value
             })}
           />
-          {errors.personas && (
-            <p className="text-sm text-red-600 mt-1">{errors.personas.message as string}</p>
-          )}
+          {errors.personas && <p className="text-sm text-red-600 mt-1">{errors.personas.message as string}</p>}
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-1">Pain Points</label>
-          <textarea
-            className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-signal"
-            rows={3}
-            placeholder="What problems is the customer facing?"
-            {...register('pain_points')}
-          />
+          <textarea className={inputCls} rows={3} placeholder="What problems is the customer facing?" {...register('pain_points')} />
           {errors.pain_points && <p className="text-sm text-red-600 mt-1">{errors.pain_points.message}</p>}
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-1">Benefits</label>
-          <textarea
-            className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-signal"
-            rows={3}
-            placeholder="What value does your solution deliver?"
-            {...register('benefits')}
-          />
+          <textarea className={inputCls} rows={3} placeholder="What value does your solution deliver?" {...register('benefits')} />
           {errors.benefits && <p className="text-sm text-red-600 mt-1">{errors.benefits.message}</p>}
         </div>
 

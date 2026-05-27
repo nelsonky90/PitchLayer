@@ -13,11 +13,17 @@ export default function PitchView({
   pitchId,
   company,
   opportunity,
+  recipientName,
+  recipientJobTitle,
+  logoUrl,
   initialPersonas
 }: {
   pitchId: string;
   company: string;
   opportunity: string;
+  recipientName: string;
+  recipientJobTitle: string;
+  logoUrl?: string | null;
   initialPersonas: Persona[];
 }) {
   const router = useRouter();
@@ -36,7 +42,9 @@ export default function PitchView({
       const res = await fetch(`/api/pitches/${pitchId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ai_output: { personas } })
+        body: JSON.stringify({
+          ai_output: { personas, recipient_name: recipientName, recipient_job_title: recipientJobTitle, logo_url: logoUrl }
+        })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Save failed');
@@ -56,6 +64,11 @@ export default function PitchView({
         <div>
           <h1 className="text-3xl font-bold">{company}</h1>
           <p className="text-slate">{opportunity}</p>
+          {recipientName && (
+            <p className="text-sm text-teal font-medium mt-1">
+              Internal Pitch for {recipientName}, {recipientJobTitle}
+            </p>
+          )}
         </div>
         <div className="flex flex-wrap gap-2">
           {editing ? (
@@ -64,11 +77,7 @@ export default function PitchView({
                 {saving ? 'Saving…' : 'Save changes'}
               </button>
               <button
-                onClick={() => {
-                  setPersonas(initialPersonas);
-                  setEditing(false);
-                  setStatus(null);
-                }}
+                onClick={() => { setPersonas(initialPersonas); setEditing(false); setStatus(null); }}
                 className="px-3 py-2 rounded border border-gray-300 hover:bg-gray-50"
               >
                 Cancel
@@ -81,12 +90,24 @@ export default function PitchView({
               </button>
               <Link
                 href={{ pathname: '/pitch/new', query: { from: pitchId } }}
-                className="px-3 py-2 rounded border border-gray-300 hover:bg-gray-50"
+                className="px-3 py-2 rounded border border-gray-300 hover:bg-gray-50 text-sm"
               >
                 Duplicate for new persona
               </Link>
-              <PDFExport personas={personas} pitchId={pitchId} />
-              <SlidesExport personas={personas} />
+              <PDFExport
+                personas={personas}
+                company={company}
+                recipientName={recipientName}
+                recipientJobTitle={recipientJobTitle}
+                logoUrl={logoUrl}
+              />
+              <SlidesExport
+                personas={personas}
+                company={company}
+                recipientName={recipientName}
+                recipientJobTitle={recipientJobTitle}
+                logoUrl={logoUrl}
+              />
             </>
           )}
         </div>

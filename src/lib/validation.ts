@@ -28,7 +28,10 @@ export const pitchSchema = z.object({
   opportunity: z.string().min(2).max(500).trim(),
   personas: z.array(z.string().min(1).trim()).min(1),
   pain_points: z.string().min(2).max(1000).trim(),
-  benefits: z.string().min(2).max(1000).trim()
+  benefits: z.string().min(2).max(1000).trim(),
+  recipient_name: z.string().min(1).max(100).trim(),
+  recipient_job_title: z.string().min(1).max(100).trim(),
+  logo_url: z.string().url().optional().or(z.literal(''))
 });
 
 export const pitchUpdateSchema = z.object({

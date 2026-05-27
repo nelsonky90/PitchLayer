@@ -21,16 +21,22 @@ export default async function PitchDetailPage({ params }: { params: { id: string
   if (!session?.user?.id) redirect('/auth/signin');
 
   const pitch = await getPitch(params.id, session.user.id);
-  if (!pitch) {
-    return <p>Pitch not found.</p>;
-  }
-  const personas = ((pitch.ai_output as Record<string, unknown>)?.personas || []) as Persona[];
+  if (!pitch) return <p>Pitch not found.</p>;
+
+  const output = pitch.ai_output as Record<string, unknown>;
+  const personas = (output?.personas || []) as Persona[];
+  const recipientName = (output?.recipient_name as string) || '';
+  const recipientJobTitle = (output?.recipient_job_title as string) || '';
+  const logoUrl = (output?.logo_url as string) || null;
 
   return (
     <PitchView
       pitchId={pitch.id}
       company={pitch.company}
       opportunity={pitch.opportunity}
+      recipientName={recipientName}
+      recipientJobTitle={recipientJobTitle}
+      logoUrl={logoUrl}
       initialPersonas={personas}
     />
   );

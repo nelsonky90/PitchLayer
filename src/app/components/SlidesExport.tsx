@@ -2,11 +2,31 @@
 
 import { Persona } from '@/types/pitch';
 
-function buildHtml(personas: Persona[]): string {
+function escHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+interface SlidesExportProps {
+  personas: Persona[];
+  company: string;
+  recipientName: string;
+  recipientJobTitle: string;
+  logoUrl?: string | null;
+}
+
+function buildHtml({ personas, company, recipientName, recipientJobTitle, logoUrl }: SlidesExportProps): string {
+  const logoTag = logoUrl
+    ? `<img src="${escHtml(logoUrl)}" alt="${escHtml(company)} logo" style="height:40px;object-fit:contain;margin-right:16px" onerror="this.style.display='none'">`
+    : '';
+
   const slides = personas.map((p) => `
     <section class="slide">
       <div class="slide-header">
-        <h2>${escHtml(p.name)}</h2>
+        <div class="header-left">
+          ${logoTag}
+          <span class="company">${escHtml(company.toUpperCase())}</span>
+        </div>
+        <div class="recipient">Internal Pitch for ${escHtml(recipientName)}, ${escHtml(recipientJobTitle)}</div>
       </div>
       <div class="slide-body">
         <div class="col">
@@ -28,32 +48,11 @@ function buildHtml(personas: Persona[]): string {
           </div>
         </div>
         <div class="col">
-          ${p.benefits?.length ? `
-          <div class="field">
-            <div class="label">Benefits</div>
-            <ul>${p.benefits.map((b) => `<li>${escHtml(b)}</li>`).join('')}</ul>
-          </div>` : ''}
-          ${p.headlines?.length ? `
-          <div class="field">
-            <div class="label">Headlines</div>
-            <ul>${p.headlines.map((h) => `<li>${escHtml(h)}</li>`).join('')}</ul>
-          </div>` : ''}
-          ${p.talking_points?.length ? `
-          <div class="field">
-            <div class="label">Talking Points</div>
-            <ul>${p.talking_points.map((t) => `<li>${escHtml(t)}</li>`).join('')}</ul>
-          </div>` : ''}
-          ${p.objections?.length ? `
-          <div class="field">
-            <div class="label">Objection Handling</div>
-            <ul>${p.objections.map((o) => `<li><strong>${escHtml(o.objection)}</strong> — ${escHtml(o.response)}</li>`).join('')}</ul>
-          </div>` : ''}
-          ${p.email_template ? `
-          <div class="field">
-            <div class="label">Internal Email Template</div>
-            <p><strong>Subject:</strong> ${escHtml(p.email_template.subject)}</p>
-            <p style="white-space:pre-wrap;margin-top:8px">${escHtml(p.email_template.body)}</p>
-          </div>` : ''}
+          ${p.benefits?.length ? `<div class="field"><div class="label">Benefits</div><ul>${p.benefits.map((b) => `<li>${escHtml(b)}</li>`).join('')}</ul></div>` : ''}
+          ${p.headlines?.length ? `<div class="field"><div class="label">Headlines</div><ul>${p.headlines.map((h) => `<li>${escHtml(h)}</li>`).join('')}</ul></div>` : ''}
+          ${p.talking_points?.length ? `<div class="field"><div class="label">Talking Points</div><ul>${p.talking_points.map((t) => `<li>${escHtml(t)}</li>`).join('')}</ul></div>` : ''}
+          ${p.objections?.length ? `<div class="field"><div class="label">Objection Handling</div><ul>${p.objections.map((o) => `<li><strong>${escHtml(o.objection)}</strong> — ${escHtml(o.response)}</li>`).join('')}</ul></div>` : ''}
+          ${p.email_template ? `<div class="field"><div class="label">Internal Email Template</div><p><strong>Subject:</strong> ${escHtml(p.email_template.subject)}</p><p style="white-space:pre-wrap;margin-top:8px">${escHtml(p.email_template.body)}</p></div>` : ''}
         </div>
       </div>
     </section>`).join('');
@@ -62,14 +61,16 @@ function buildHtml(personas: Persona[]): string {
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<title>PitchLayer Export</title>
+<title>Internal Pitch for ${escHtml(recipientName)} — ${escHtml(company)}</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:system-ui,sans-serif;background:#F9FAFB;color:#1A1E2E}
   .slide{display:none;min-height:100vh;flex-direction:column;page-break-after:always}
   .slide.active{display:flex}
-  .slide-header{background:#1A1E2E;color:#fff;padding:24px 40px;display:flex;align-items:center;gap:12px}
-  .slide-header h2{font-size:1.6rem}
+  .slide-header{background:#1A1E2E;color:#fff;padding:16px 40px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .header-left{display:flex;align-items:center}
+  .company{font-size:1.2rem;font-weight:700;letter-spacing:.05em}
+  .recipient{font-size:1rem;color:#2DD4BF;font-weight:600;text-align:right}
   .slide-body{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:32px 40px;flex:1}
   .col{display:flex;flex-direction:column;gap:16px}
   .field{background:#fff;border-radius:8px;padding:16px;border:1px solid #e2e8f0}
@@ -102,18 +103,14 @@ ${slides}
 </body></html>`;
 }
 
-function escHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
-export default function SlidesExport({ personas }: { personas: Persona[] }) {
+export default function SlidesExport(props: SlidesExportProps) {
   const download = () => {
-    const html = buildHtml(personas);
+    const html = buildHtml(props);
     const blob = new Blob([html], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'pitchlayer-slides.html';
+    a.download = `pitch-${props.company.toLowerCase().replace(/\s+/g, '-')}.html`;
     a.click();
     URL.revokeObjectURL(url);
   };

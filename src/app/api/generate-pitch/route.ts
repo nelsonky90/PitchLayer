@@ -88,7 +88,12 @@ Rules:
       return NextResponse.json({ error: 'AI returned unexpected structure. Please try again.' }, { status: 500 });
     }
 
-    const aiJson = validated.data;
+    const fullOutput = {
+      ...validated.data,
+      recipient_name: parsed.recipient_name,
+      recipient_job_title: parsed.recipient_job_title,
+      logo_url: parsed.logo_url || null
+    };
     const pitchId = randomUUID();
 
     const { error: dbError } = await supabaseAdmin.from('pitches').insert({
@@ -99,7 +104,7 @@ Rules:
       personas: parsed.personas,
       pain_points: parsed.pain_points,
       benefits: parsed.benefits,
-      ai_output: aiJson as import('@/lib/types').Json
+      ai_output: fullOutput as import('@/lib/types').Json
     });
 
     if (dbError) {
@@ -107,7 +112,7 @@ Rules:
       return NextResponse.json({ error: `Database error: ${dbError.message}` }, { status: 500 });
     }
 
-    return NextResponse.json({ pitch_id: pitchId, ai_output: aiJson });
+    return NextResponse.json({ pitch_id: pitchId, ai_output: fullOutput });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Internal Server Error';
     console.error('generate-pitch unhandled error:', message);

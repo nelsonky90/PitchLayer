@@ -10,66 +10,89 @@ const PAGE_W = 210;
 const MARGIN = 14;
 const CONTENT_W = PAGE_W - MARGIN * 2;
 
-function addPageHeader(doc: jsPDF, pitchId?: string) {
-  doc.setFillColor(MIDNIGHT);
-  doc.rect(0, 0, PAGE_W, 22, 'F');
-  doc.setTextColor('#F9FAFB');
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text('PitchLayer', MARGIN, 14);
-  if (pitchId) {
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor('#94A3B8');
-    doc.text(`Pitch ID: ${pitchId}`, PAGE_W - MARGIN, 14, { align: 'right' });
+async function loadImageBase64(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    return await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
   }
 }
 
 function addSection(doc: jsPDF, label: string, value: string | string[], y: number): number {
-  if (y > 265) {
-    doc.addPage();
-    y = 20;
-  }
+  if (y > 265) { doc.addPage(); y = 20; }
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(TEAL);
   doc.text(label.toUpperCase(), MARGIN, y);
   y += 5;
-
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(MIDNIGHT);
   doc.setFontSize(10);
-
   if (Array.isArray(value)) {
     for (const item of value) {
       const lines = doc.splitTextToSize(`• ${item}`, CONTENT_W);
+      if (y + lines.length * 5 > 275) { doc.addPage(); y = 20; }
       doc.text(lines, MARGIN + 2, y);
       y += lines.length * 5;
     }
   } else {
     const lines = doc.splitTextToSize(value, CONTENT_W);
+    if (y + lines.length * 5 > 275) { doc.addPage(); y = 20; }
     doc.text(lines, MARGIN, y);
     y += lines.length * 5;
   }
-
   return y + 4;
 }
 
-export default function PDFExport({ personas, pitchId }: { personas: Persona[]; pitchId?: string }) {
-  const generate = () => {
+interface PDFExportProps {
+  personas: Persona[];
+  company: string;
+  recipientName: string;
+  recipientJobTitle: string;
+  logoUrl?: string | null;
+}
+
+export default function PDFExport({ personas, company, recipientName, recipientJobTitle, logoUrl }: PDFExportProps) {
+  const generate = async () => {
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+    const logoBase64 = logoUrl ? await loadImageBase64(logoUrl) : null;
 
     personas.forEach((persona, idx) => {
       if (idx > 0) doc.addPage();
 
-      addPageHeader(doc, pitchId);
+      // Header bar — company branding, no PitchLayer, no pitch ID
+      doc.setFillColor(MIDNIGHT);
+      doc.rect(0, 0, PAGE_W, 24, 'F');
 
-      // Persona name banner
-      let y = 32;
+      let headerX = MARGIN;
+      if (logoBase64) {
+        try {
+          doc.addImage(logoBase64, 'PNG', MARGIN, 4, 16, 16);
+          headerX = MARGIN + 20;
+        } catch {
+          // Logo failed — just use text
+        }
+      }
+
+      doc.setTextColor('#F9FAFB');
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text(company.toUpperCase(), headerX, 15);
+
+      // Recipient line
+      let y = 34;
       doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(MIDNIGHT);
-      doc.text(persona.name, MARGIN, y);
+      doc.text(`Internal Pitch for ${recipientName}, ${recipientJobTitle}`, MARGIN, y);
       y += 2;
       doc.setDrawColor(TEAL);
       doc.setLineWidth(0.5);
@@ -79,30 +102,19 @@ export default function PDFExport({ personas, pitchId }: { personas: Persona[]; 
       y = addSection(doc, 'Summary', persona.summary, y);
       y = addSection(doc, 'Challenge', persona.challenge, y);
       y = addSection(doc, 'Value Proposition', persona.value_prop, y);
-
-      if (persona.benefits?.length) {
-        y = addSection(doc, 'Benefits', persona.benefits, y);
-      }
-      if (persona.headlines?.length) {
-        y = addSection(doc, 'Headlines', persona.headlines, y);
-      }
-      if (persona.talking_points?.length) {
-        y = addSection(doc, 'Talking Points', persona.talking_points, y);
-      }
+      if (persona.benefits?.length) y = addSection(doc, 'Benefits', persona.benefits, y);
+      if (persona.headlines?.length) y = addSection(doc, 'Headlines', persona.headlines, y);
+      if (persona.talking_points?.length) y = addSection(doc, 'Talking Points', persona.talking_points, y);
       if (persona.objections?.length) {
-        const formatted = persona.objections.map((o) => `"${o.objection}" — ${o.response}`);
-        y = addSection(doc, 'Objection Handling', formatted, y);
+        y = addSection(doc, 'Objection Handling',
+          persona.objections.map((o) => `"${o.objection}" — ${o.response}`), y);
       }
       if (persona.email_template) {
-        y = addSection(
-          doc,
-          'Internal Email Template',
-          [`Subject: ${persona.email_template.subject}`, persona.email_template.body],
-          y
-        );
+        y = addSection(doc, 'Internal Email Template',
+          [`Subject: ${persona.email_template.subject}`, persona.email_template.body], y);
       }
       if (persona.cta) {
-        // CTA highlight box
+        if (y > 265) { doc.addPage(); y = 20; }
         doc.setFillColor('#F0FDFA');
         doc.roundedRect(MARGIN, y, CONTENT_W, 14, 2, 2, 'F');
         doc.setFontSize(9);
@@ -112,19 +124,17 @@ export default function PDFExport({ personas, pitchId }: { personas: Persona[]; 
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(MIDNIGHT);
         doc.setFontSize(10);
-        const ctaLines = doc.splitTextToSize(persona.cta, CONTENT_W - 6);
-        doc.text(ctaLines, MARGIN + 3, y + 10);
+        doc.text(doc.splitTextToSize(persona.cta, CONTENT_W - 6), MARGIN + 3, y + 10);
         y += 18;
       }
 
-      // Footer
+      // Footer — page number only, no PitchLayer branding
       doc.setFontSize(8);
       doc.setTextColor(SLATE);
       doc.text(`Page ${idx + 1} of ${personas.length}`, PAGE_W - MARGIN, 290, { align: 'right' });
-      doc.text('Generated by PitchLayer', MARGIN, 290);
     });
 
-    doc.save(`pitch-${pitchId || 'export'}.pdf`);
+    doc.save(`pitch-${company.toLowerCase().replace(/\s+/g, '-')}.pdf`);
   };
 
   return (
