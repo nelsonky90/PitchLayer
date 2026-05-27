@@ -77,9 +77,15 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
-        token.sub = user.id as string;
+        if (account?.provider === 'google' && user.email) {
+          // Google's user.id is a numeric string, not our UUID — look up the real one
+          const dbUser = await getUserByEmail(user.email);
+          token.sub = dbUser?.id ?? randomUUID();
+        } else {
+          token.sub = user.id as string;
+        }
       }
       return token;
     },
