@@ -4,7 +4,6 @@ import { pitchSchema, personaSchema } from '@/lib/validation';
 import { generatePitchContent } from '@/lib/openai';
 import { supabaseAdmin } from '@/lib/db';
 import { rateLimit } from '@/utils/rateLimit';
-import { verifyCsrf } from '@/utils/csrf';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { randomUUID } from 'crypto';
@@ -15,11 +14,11 @@ const aiOutputSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    verifyCsrf();
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
     const rate = rateLimit(session.user.id);
     if (!rate.success) {
       return NextResponse.json({ error: 'Rate limit exceeded. Try again in a minute.' }, { status: 429 });
@@ -54,13 +53,20 @@ Return a JSON object with this exact structure (pure JSON only, no markdown):
 
 Generate one persona object for EACH of these ${parsed.personas.length} persona(s): ${parsed.personas.join(', ')}.`;
 
-    const aiResponse = await generatePitchContent(prompt);
+    let aiResponse: string;
+    try {
+      aiResponse = await generatePitchContent(prompt);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('Anthropic error:', msg);
+      return NextResponse.json({ error: `AI error: ${msg}` }, { status: 502 });
+    }
 
     let rawJson: unknown;
     try {
       rawJson = JSON.parse(aiResponse);
     } catch {
-      console.error('AI response was not valid JSON:', aiResponse.slice(0, 200));
+      console.error('AI response was not valid JSON:', aiResponse.slice(0, 300));
       return NextResponse.json({ error: 'AI returned invalid JSON. Please try again.' }, { status: 500 });
     }
 
@@ -86,20 +92,13 @@ Generate one persona object for EACH of these ${parsed.personas.length} persona(
 
     if (dbError) {
       console.error('DB insert error:', dbError.message);
-      return NextResponse.json({ error: 'Failed to save pitch. Please try again.' }, { status: 500 });
+      return NextResponse.json({ error: `Database error: ${dbError.message}` }, { status: 500 });
     }
 
     return NextResponse.json({ pitch_id: pitchId, ai_output: aiJson });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Internal Server Error';
-    console.error('generate-pitch error:', message);
-    if (process.env.SLACK_WEBHOOK_URL) {
-      fetch(process.env.SLACK_WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: `500 in generate-pitch: ${message}` })
-      }).catch(() => {});
-    }
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error('generate-pitch unhandled error:', message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
